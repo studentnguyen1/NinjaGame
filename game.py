@@ -1,33 +1,27 @@
 import sys
-import pygame
 import math
-import scripts.entities
-import scripts.utils
 import random
-from scripts.particle import Particle
 
-
+import pygame
 
 from scripts.utils import load_image, load_images, Animation
-from scripts.utils import load_images
+from scripts.entities import PhysicsEntity, Player
 from scripts.tilemap import Tilemap
 from scripts.clouds import Clouds
-
-
-from scripts.entities import PhysicsEntity, Player
+from scripts.particle import Particle
 
 class Game:
     def __init__(self):
         pygame.init()
-        pygame.display.set_caption("Ninja Dash")
+
+        pygame.display.set_caption('ninja game')
         self.screen = pygame.display.set_mode((640, 480))
         self.display = pygame.Surface((320, 240))
 
-
         self.clock = pygame.time.Clock()
-
-        self.movement = [False, False]  
-
+        
+        self.movement = [False, False]
+        
         self.assets = {
             'decor': load_images('tiles/decor'),
             'grass': load_images('tiles/grass'),
@@ -43,21 +37,15 @@ class Game:
             'player/wall_slide': Animation(load_images('entities/player/wall_slide')),
             'particle/leaf': Animation(load_images('particles/leaf'), img_dur=20, loop=False),
             'particle/particle': Animation(load_images('particles/particle'), img_dur=6, loop=False),
-
-
-
-
         }
+        
         self.clouds = Clouds(self.assets['clouds'], count=16)
-
-
-    
-
-        self.player = Player(self, (50,50), (8,15))
+        
+        self.player = Player(self, (50, 50), (8, 15))
         
         self.tilemap = Tilemap(self, tile_size=16)
         self.tilemap.load('map.json')
-
+        
         self.leaf_spawners = []
         for tree in self.tilemap.extract([('large_decor', 2)], keep=True):
             self.leaf_spawners.append(pygame.Rect(4 + tree['pos'][0], 4 + tree['pos'][1], 23, 13))
@@ -67,35 +55,32 @@ class Game:
                 self.player.pos = spawner['pos']
             else:
                 print(spawner['pos'], 'enemy')
-
+                
         self.particles = []
         
-
         self.scroll = [0, 0]
-
-
+        
     def run(self):
         while True:
             self.display.blit(self.assets['background'], (0, 0))
-
+            
             self.scroll[0] += (self.player.rect().centerx - self.display.get_width() / 2 - self.scroll[0]) / 30
             self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2 - self.scroll[1]) / 30
             render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
-
+            
             for rect in self.leaf_spawners:
                 if random.random() * 49999 < rect.width * rect.height:
                     pos = (rect.x + random.random() * rect.width, rect.y + random.random() * rect.height)
                     self.particles.append(Particle(self, 'leaf', pos, velocity=[-0.1, 0.3], frame=random.randint(0, 20)))
-
-          
-
+            
             self.clouds.update()
             self.clouds.render(self.display, offset=render_scroll)
-
+            
             self.tilemap.render(self.display, offset=render_scroll)
+            
             self.player.update(self.tilemap, (self.movement[1] - self.movement[0], 0))
             self.player.render(self.display, offset=render_scroll)
-
+            
             for particle in self.particles.copy():
                 kill = particle.update()
                 particle.render(self.display, offset=render_scroll)
@@ -104,9 +89,6 @@ class Game:
                 if kill:
                     self.particles.remove(particle)
             
-            
-            print(self.tilemap.physics_rects_around(self.player.pos))
-
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -125,13 +107,9 @@ class Game:
                         self.movement[0] = False
                     if event.key == pygame.K_RIGHT:
                         self.movement[1] = False
+            
             self.screen.blit(pygame.transform.scale(self.display, self.screen.get_size()), (0, 0))
             pygame.display.update()
             self.clock.tick(60)
-           
-            
 
-Game().run()     
-
-
-
+Game().run()
