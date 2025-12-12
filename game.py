@@ -52,14 +52,12 @@ class Game:
         self.player = Player(self, (50, 50), (8, 15))
         
         self.tilemap = Tilemap(self, tile_size=16)
+
+        self.level = 0
+
         self.load_level(0)
         
        
-        self.projectiles = []
-        self.particles = []
-        self.sparks = []
-        self.scroll = [0, 0]
-
         self.screenshake = 0
 
         
@@ -71,14 +69,21 @@ class Game:
             self.leaf_spawners.append(pygame.Rect(4 + tree['pos'][0], 4 + tree['pos'][1], 23, 13))
         
         self.enemies = []
-        self.dead = 0
-
         for spawner in self.tilemap.extract([('spawners', 0), ('spawners', 1)]):
             if spawner['variant'] == 0:
                 self.player.pos = spawner['pos']
                 self.player.air_time = 0
             else:
                 self.enemies.append(Enemy(self, spawner['pos'], (8, 15)))
+
+        self.projectiles = []
+        self.particles = []
+        self.sparks = []
+
+        self.scroll = [0, 0]
+       
+        self.dead = 0
+        self.transition = -30
 
         
     def run(self):
@@ -91,7 +96,7 @@ class Game:
             if self.dead:
                 self.dead += 1
                 if self.dead > 40:
-                    self.load_level(0)
+                    self.load_level(self.level)
             
             self.scroll[0] += (self.player.rect().centerx - self.display.get_width() / 2 - self.scroll[0]) / 30
             self.scroll[1] += (self.player.rect().centery - self.display.get_height() / 2 - self.scroll[1]) / 30
